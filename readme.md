@@ -7,6 +7,7 @@
 1. Clone the repository (Or download the files).
 2. In the terminnal, reach the root directory of this project. 
 3. run `docker-compose up`.
+4. Open your browser on `localhost:3000`.
 
 > To start the app with node LOCAL
 
