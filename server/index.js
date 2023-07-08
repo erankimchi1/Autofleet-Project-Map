@@ -9,6 +9,6 @@ app.use(express.json());
 app.use(cors());
 app.use('/vehicles', vehiclesRoute);
 
-app.get('/', (req,res) => res.send("this is my map"));
+app.get('/', (req,res) => res.send("Map Project Autofleet"));
 
 app.listen(PORT, console.log(`Server is running on port: ${PORT}`));

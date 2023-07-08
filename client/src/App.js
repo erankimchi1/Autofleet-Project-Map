@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, FeatureGroup} from "react-leaflet";
+// import { MapContainer, TileLayer, Marker, Popup, FeatureGroup} from "react-leaflet";
+import { MapContainer, FeatureGroup} from "react-leaflet";
 import "./App.css";
 import { EditControl } from "react-leaflet-draw";
-
+import MarkerSign from './ui-components/MarkerSign/MarkerSign.js';
+import TileLayerMap from './ui-components/TileLayerMap/TileLayerMap.js';
+import PopupList from "./ui-components/PopupList/PopupList";
 function App() {
   const [Vehicles, setVehicle] = useState([]);
   const [vehicleInArea, setVehicleInside] = useState([]);
+  const [polygonCoordinates, setPolygonCoordinates] = useState([]);
+  const [flagCreated, setFlagCreated] = useState(false);
+  const [flagReloaded, setFlagReloaded] = useState(true);
+  const [newSession, setNewSession] = useState(true);
+  const [deletedPolygons, setDeletedPolygons] = useState([]);
+  const [polygonsAfterDeleted, setPolygonsAfterDeleted] = useState([]);
+
   // Function to collect data
   const getApiData = async () => {
     const response = await fetch("http://localhost:8000/vehicles").then(
@@ -17,18 +27,9 @@ function App() {
     getApiData();
   }, []);
 
-  const [polygonCoordinates, setPolygonCoordinates] = useState([]);
-  const [flagCreated, setFlagCreated] = useState(false);
-  const [flagReloaded, setFlagReloaded] = useState(true);
-  const [newSession, setNewSession] = useState(true);
-  const [deletedPolygons, setDeletedPolygons] = useState([]);
-  const [polygonsAfterDeleted, setPolygonsAfterDeleted] = useState([]);
-
-
   const _onCreate = (e) => {
     setFlagCreated(true);
     const { layerType, layer } = e;
-    // console.log(e)
     if (layerType === "polygon") {
       const coordinates = layer
         .getLatLngs()[0]
@@ -66,10 +67,6 @@ function App() {
     else myDiv.style.display = "none";
   }, [vehicleInArea,polygonCoordinates]);
 
-  const resetVehicleState = () => setFlagReloaded(true);
-  const newSessionState = () => setNewSession(false);
-
-
   useEffect(() => {
     window.addEventListener("load", resetVehicleState);
     if (flagCreated && Vehicles) {
@@ -86,17 +83,11 @@ function App() {
     }
   };
 
-  const closeDiv = () => {
-    let myDiv = document.getElementById("container-div-id");
-    myDiv.style.display = "none";
-  } 
-
-
   useEffect(() => {
     const convertCord = () => {
       // Perform actions that depend on the data variable
       if (deletedPolygons !== null) {
-        convertCoordinates(deletedPolygons)
+        convertCoordinates(deletedPolygons);
         handleDeletion();
       }
     };
@@ -107,7 +98,7 @@ function App() {
   useEffect(() => {
     const deletedUpdate = () => {
       if (polygonsAfterDeleted !== null) {
-        setPolygonCoordinates(polygonsAfterDeleted)
+        setPolygonCoordinates(polygonsAfterDeleted);
       }
     };
 
@@ -116,7 +107,7 @@ function App() {
 
   useEffect(() => {
       if (polygonsAfterDeleted === polygonCoordinates) {
-        getVehiclesInsideArea()
+        getVehiclesInsideArea();
       }
   }, [polygonsAfterDeleted, polygonCoordinates]);
 
@@ -133,8 +124,8 @@ function App() {
         result.push(subResult);
       });
     });
-    return removeDuplicateArr(result)
-  }
+    return removeDuplicateArr(result);
+  };
 
   const removeDuplicateArr = (result) => {
     const uniqueResult = result.reduce((accumulator, currentArray) => {
@@ -148,24 +139,18 @@ function App() {
   const handleDeletion = () => {
     const arrayDeleted = new Set(convertCoordinates(deletedPolygons).map(JSON.stringify));
     const filteredArray = polygonCoordinates.filter(item => {
-      console.log(arrayDeleted.has(JSON.stringify(item)))
       return !arrayDeleted.has(JSON.stringify(item));
     });
     setPolygonsAfterDeleted(filteredArray);
   }
+  
+  const resetVehicleState = () => setFlagReloaded(true);
+  const newSessionState = () => setNewSession(false);
 
   return (
     <div>
       {window.addEventListener("load", resetVehicleState)}
-      <div className="container-div" id="container-div-id">
-        <h1>IDs Vehicles Marked</h1>
-          <button className="close-button" onClick={closeDiv}>&times;</button>
-          <ul className="coordinates-list">
-            {
-              vehicleInArea.map((item, index) => (<li className="coordinates-item" key={index}>#{index} : {item.id}</li>))
-            }
-          </ul>
-      </div>
+      <PopupList vehicleInArea={ vehicleInArea }/>
       <MapContainer center={[51.505, -0.09]} zoom={13} scrollWheelZoom={true}>
         <FeatureGroup>
           <EditControl
@@ -185,213 +170,14 @@ function App() {
             }}
           />
         </FeatureGroup>
-        <TileLayer
-          attribution='&copy; <a  href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        <TileLayerMap />
         {Vehicles.map((vehicle) => (
-          <Marker
-            key={vehicle.id}
-            position={[vehicle.location.lat, vehicle.location.lng]}
-          >
-            <Popup position={[vehicle.location.lat, vehicle.location.lng]}>
-              <div>
-                <h2>{"id: " + vehicle.id}</h2>
-              </div>
-            </Popup>
-          </Marker>
+          <MarkerSign vehicle={ vehicle }/>
         ))}
         ;
       </MapContainer>
-      {/* {<pre className="text-left">{JSON.stringify(deletedPolygons.forEach(value => console.log(value[0])))}</pre>} */}
-      {/* {<pre className="text-left">{JSON.stringify(polygonCoordinates)}</pre>} */}
-
-      {/* {<pre className="text-left">{JSON.stringify(polygonCoordinates)}</pre>}
-      {<pre className="text-left">{JSON.stringify(convertCoordinates(deletedPolygons))}</pre>}
-      {<pre className="text-left">{JSON.stringify(polygonsAfterDeleted)}</pre>} */}
-
-
     </div>
 
   );
 }
-
 export default App;
-
-// import React, {L, useEffect, useState } from "react";
-// import {MapContainer, TileLayer, Marker, Popup, FeatureGroup} from 'react-leaflet';
-// import './App.css';
-// // import { SectionMarker } from "./sectionMarker";
-// import { EditControl } from 'react-leaflet-draw';
-// // import PolygonMap from "./polygon.js";
-// import * as turf from '@turf/turf'
-
-// function App() {
-//   const [ Vehicles, setVehicle] = useState([]);
-//   const [ v, setV] = useState([]);
-//   // Function to collect data
-//   const getApiData = async () => {
-//     const response = await fetch(
-//       "http://localhost:8000/vehicles"
-//     ).then((response) => response.json());
-//     setVehicle(response);
-//   };
-//   useEffect(() => {
-//     getApiData();
-//   }, []);
-//   //  console.log(Vehicles);
-//   // const [mapLayers, setMapLayers] = useState([]);
-//   const [polygonCoordinates, setPolygonCoordinates] = useState([]);
-//   const [area, setArea] = useState([]);
-//   const [flagCreated, setFlagCreated] = useState([false]);
-
-//   const _onCreate = (e) => {
-//     console.log(e);
-//     setFlagCreated(true);
-//     const { layerType, layer } = e;
-//     if (layerType === "polygon") {
-//       const coordinates = layer.getLatLngs()[0].map((latLng) => [latLng.lat, latLng.lng]);
-//       if (coordinates.length > 0) coordinates.push(coordinates[0]);
-//       setPolygonCoordinates(coordinates);
-//       const polygon = turf.polygon([coordinates]);
-//       const polygonArea = turf.area(polygon);
-//       setArea(polygonArea);
-  
-//       // Add popup to the created polygon
-//       layer.bindPopup(`${v}`).openPopup();
-//     }
-//   }
-
-//   // const _onCreate = (e) =>{
-//   //   console.log(e);
-//   //   setFlagCreated(true);
-//   //   const { layerType, layer } = e;
-//   //   if (layerType === "polygon") {
-//   //     // const coordinates = layer.getLatLngs()[0].map((latLng) => [latLng.lat, latLng.lng]);
-//   //     Vehicles.map(vehicle => {
-//   //       // let key = vehicle.id;
-//   //       // position=[vehicle.location.lat, vehicle.location.lng]
-//   //       // var m = L.marker([vehicle.location.lat, vehicle.location.lng]);
-//   //     })
-//   //       // console.log(Vehicles);
-
-//   //     const coordinates = layer.getLatLngs()[0].map((latLng) => [latLng.lat, latLng.lng]);
-//   //     if (coordinates.length > 0) coordinates.push(coordinates[0]);
-//   //     setPolygonCoordinates(coordinates);
-//   //     const polygon = turf.polygon([coordinates]);
-//   //     const polygonArea = turf.area(polygon);
-//   //     setArea(polygonArea);
-//   //     // console.log(coordinates);
-//   //     // checkCoordinateInsidePolygon([51.5181808472, -0.1702733338])
-//   //   }
-//   //  }
-//    useEffect( () => {
-//     if (flagCreated && Vehicles){
-//       Vehicles.map(vehicle => {
-//          let key = vehicle.id;
-//         // position=[vehicle.location.lat, vehicle.location.lng]
-//         // var m = L.marker([vehicle.location.lat, vehicle.location.lng]);
-//         checkCoordinateInsidePolygon([vehicle.location.lat, vehicle.location.lng]);
-//       })
-
-//     }
-//   }, [flagCreated]);
-
-//   const checkCoordinateInsidePolygon = (coordinate) => {
-//       console.log(polygonCoordinates.length);
-//       if (polygonCoordinates.length > 0) {
-//         const point = turf.point(coordinate);
-//         const polygon = turf.polygon([polygonCoordinates]);
-//         const isInside = turf.booleanPointInPolygon(point, polygon);
-//         // console.log(coordinate);
-//         // v.push(coordinate);
-//         if (isInside) setV(v => [...v, coordinate]);
-//         return isInside;
-//       }
-//       return false;
-//     }; 
-
-//   //  console.log(Vehicles);
-//   //  const checkCoordinateInsidePolygon = (coordinate) => {
-//   //   console.log(polygonCoordinates.length);
-//   //   if (polygonCoordinates.length > 0) {
-//   //     const point = turf.point(coordinate);
-//   //     const polygon = turf.polygon([polygonCoordinates]);
-//   //     const isInside = turf.booleanPointInPolygon(point, polygon);
-//   //     console.log(coordinate);
-//   //     return isInside;
-//   //   }
-//   //   return false;
-//   // };
-//   // const _onCreate = (e) =>{
-//   //   console.log(e);
-//   //   const { layerType, layer } = e;
-//   //   if (layerType === "polygon") {
-//   //     const { _leaflet_id } = layer;
-//   //     setMapLayers((layers) => [
-//   //       ...layers,
-//   //       { id: _leaflet_id, latlngs: layer.getLatLngs()[0] },
-//   //     ]);
-//   //     // console.log(mapLayers);
-//   //   }
-//   //  }
-
-
-//   // const getVehiclesInsideArea = async (coordinates) => {
-//   //   const response = await fetch(
-//   //     `http://localhost:8000/vehicles/insideArea/${coordinates}`
-//   //   ).then((response) => response.json());
-//   //   console.log(response);
-//   // };
-//   // useEffect(() => {
-//   //   // getVehiclesInsideArea();
-//   // }, []);
-
-//   return (
-//     <div> 
-//       <button onClick={console.log(v)}>
-          
-//       </button>
-//       <MapContainer  center={[51.505, -0.09]} zoom={13} scrollWheelZoom={true} >
-
-//         <FeatureGroup >
-//           <EditControl
-
-//               position="topleft"
-//               onCreated={_onCreate}
-
-//               draw={{
-//                 marker: false,
-//                 circlemarker: false,
-//                 circle:false,
-//                 rectangle: false,
-//                 polygon: true,
-//                 polyline: false
-//               }} />
-//         </FeatureGroup>
-//         <TileLayer
-//           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-//           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-//         />
-//         {Vehicles.map(vehicle => (
-//           <Marker
-
-//             key={vehicle.id}
-//             position={[vehicle.location.lat, vehicle.location.lng]}>
-//             <Popup position={[vehicle.location.lat, vehicle.location.lng]}>
-//               <div>
-//                 <h2>{"id: " + vehicle.id}</h2>
-//               </div>
-//             </Popup>
-//           </Marker>
-//         ))};
-//       </MapContainer>
-//       {/* <pre className="text-left">{JSON.stringify(Vehicles)}</pre> */}
-//       <pre className="text-left">{JSON.stringify(v, 0, 2)}</pre>
-//     </div>
-//   );
-  
-// }
-
-
-// export default App;

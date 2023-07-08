@@ -1,0 +1,18 @@
+# dependencies
+/node_modules
+/client/node_modules
+/server/node_modules
+
+# logs
+*.log
+
+# runtime
+*.pid
+*.seed
+*.lock
+
+# build artifacts
+/client/dist
+/client/build
+/server/dist
+/server/build

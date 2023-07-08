@@ -1,4 +1,3 @@
-// import vehiclesData from '../data/vehicles-location.json'
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -20,7 +19,7 @@ export const getVehiclesInsideArea = (req, res) => {
         vehiclesData.forEach((k, v) => {
             if(isPointInsidePolygon([k.location.lat, k.location.lng], p)){
                 found = vehicleInsideArea.find( (element) => element.id === k.id);
-                if (!found) vehicleInsideArea.push(k)
+                if (!found) vehicleInsideArea.push(k);
             }
         })
     })
