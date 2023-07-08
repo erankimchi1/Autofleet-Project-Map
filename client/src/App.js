@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { MapContainer, FeatureGroup} from "react-leaflet";
+import { MapContainer, FeatureGroup } from "react-leaflet";
 import "./App.css";
 import { EditControl } from "react-leaflet-draw";
 import MarkerSign from './ui-components/MarkerSign/MarkerSign.js';
 import TileLayerMap from './ui-components/TileLayerMap/TileLayerMap.js';
 import PopupList from "./ui-components/PopupList/PopupList";
+import { vehicleService } from "./services/vehicleService";
 
 function App() {
   const [Vehicles, setVehicle] = useState([]);
@@ -16,13 +17,12 @@ function App() {
   const [deletedPolygons, setDeletedPolygons] = useState([]);
   const [polygonsAfterDeleted, setPolygonsAfterDeleted] = useState([]);
 
-  // Function to collect data
-  const getApiData = async () => {
-    const response = await fetch("http://localhost:8000/vehicles").then(
-      (response) => response.json()
-    );
-    setVehicle(response);
-  };
+  const getApiData = () => {
+    vehicleService.fetchVehicles().then(response => {
+      setVehicle(response);
+    });
+  }
+
   useEffect(() => {
     getApiData();
   }, []);
@@ -34,38 +34,29 @@ function App() {
       const coordinates = layer
         .getLatLngs()[0]
         .map((latLng) => [latLng.lat, latLng.lng]);
-        setPolygonCoordinates((poly) => [...poly, coordinates])
+      setPolygonCoordinates((poly) => [...poly, coordinates])
     }
   };
 
   const getVehiclesInsideArea = async () => {
-      const response = await fetch('http://localhost:8000/vehicles/insideArea', {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Polygon": JSON.stringify(polygonCoordinates),
-          "X-Flag": flagReloaded
+    vehicleService.areaVerification(polygonCoordinates, flagReloaded)
+      .then(response => {
+        setVehicleInside(response);
+        setFlagReloaded(false);
+        let myDiv = document.getElementById("container-div-id");
+        if (!newSession) {
+          myDiv.style.display = "block";
+          newSessionState();
         }
-      }).then(
-        (response) => response.json()
-      );
-      setVehicleInside(response);
-      setFlagReloaded(false);
-      let myDiv = document.getElementById("container-div-id");
-      console.log(newSession);
-      if (!newSession){
-        myDiv.style.display = "block";
-        newSessionState();
-      } 
+      });
   };
   useEffect(() => {
     let myDiv = document.getElementById("container-div-id");
-    if(vehicleInArea[0] !== undefined) {
-      console.log(vehicleInArea[0])
+    if (vehicleInArea[0] !== undefined) {
       myDiv.style.display = "block";
     }
     else myDiv.style.display = "none";
-  }, [vehicleInArea,polygonCoordinates]);
+  }, [vehicleInArea, polygonCoordinates]);
 
   useEffect(() => {
     window.addEventListener("load", resetVehicleState);
@@ -73,13 +64,14 @@ function App() {
       getVehiclesInsideArea();
     }
     setFlagCreated(false);
+    // eslint-disable-next-line
   }, [flagCreated]);
 
   const _onDelete = (e) => {
-    const { layers} = e;
+    const { layers } = e;
     const lays = layers._layers;
     for (const [key, value] of Object.entries(lays)) {
-      setDeletedPolygons((deletedPolygons) => [...deletedPolygons, value._latlngs]);
+      if (key) setDeletedPolygons((deletedPolygons) => [...deletedPolygons, value._latlngs]);
     }
   };
 
@@ -92,6 +84,7 @@ function App() {
     };
 
     convertCord();
+    // eslint-disable-next-line
   }, [deletedPolygons]);
 
   useEffect(() => {
@@ -105,9 +98,10 @@ function App() {
   }, [polygonsAfterDeleted]);
 
   useEffect(() => {
-      if (polygonsAfterDeleted === polygonCoordinates) {
-        getVehiclesInsideArea();
-      }
+    if (polygonsAfterDeleted === polygonCoordinates) {
+      getVehiclesInsideArea();
+    }
+    // eslint-disable-next-line
   }, [polygonsAfterDeleted, polygonCoordinates]);
 
   const convertCoordinates = (coordinates) => {
@@ -142,14 +136,14 @@ function App() {
     });
     setPolygonsAfterDeleted(filteredArray);
   }
-  
+
   const resetVehicleState = () => setFlagReloaded(true);
   const newSessionState = () => setNewSession(false);
 
   return (
     <div>
       {window.addEventListener("load", resetVehicleState)}
-      <PopupList vehicleInArea={ vehicleInArea }/>
+      <PopupList vehicleInArea={vehicleInArea}/>
       <MapContainer center={[51.505, -0.09]} zoom={13} scrollWheelZoom={true}>
         <FeatureGroup>
           <EditControl
@@ -171,7 +165,7 @@ function App() {
         </FeatureGroup>
         <TileLayerMap />
         {Vehicles.map((vehicle) => (
-          <MarkerSign vehicle={ vehicle }/>
+          <MarkerSign key={vehicle.id} vehicle={vehicle}/>
         ))}
         ;
       </MapContainer>

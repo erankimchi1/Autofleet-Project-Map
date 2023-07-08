@@ -26,24 +26,6 @@
   display: none;
 }
 
-/* .centered-div {
-  border: 5px solid;
-  margin: auto;
-  max-width: 40%;
-  max-height: 60%;
-  padding: 10px;
-  top: 20%;
-  right: 10%;
-  background: lightblue;
-  color: rgb(65, 41, 3);
-  padding: 10px;
-  border-radius: 10px;
-  display: block;
-  font-size: 18px;
-  position: absolute;
-  z-index: 2;
-} */
-
 .close-button {
   position: absolute;
   top: 5px;
