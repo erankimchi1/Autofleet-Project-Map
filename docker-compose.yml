@@ -1,0 +1,21 @@
+version: '3'
+services:
+  server:
+    build: ./server
+    container_name: server_con
+    ports:
+      - 8000:8000
+    volumes:
+      - ./server:/usr/src/app
+    environment:
+      - NODE_ENV=development
+
+  client:
+    build: ./client
+    container_name: client_con
+    ports:
+      - 3000:3000
+    volumes:
+      - ./client:/usr/src/app
+    environment:
+      - NODE_ENV=development
