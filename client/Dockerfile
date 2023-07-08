@@ -1,9 +1,11 @@
-FROM node:14 as build
-WORKDIR /usr/src/app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
+FROM node:13.12.0-alpine
+WORKDIR /app
+ENV PATH /app/node_modules/.bin:$PATH
+COPY package.json ./
+COPY package-lock.json ./
+RUN npm install --silent
+RUN npm install react-scripts@3.4.1 -g --silent
 
-FROM nginx:1.19.0-alpine
-COPY --from=build /usr/src/app/build /usr/share/nginx/html
+COPY . ./
+
+CMD ["npm", "start"]
