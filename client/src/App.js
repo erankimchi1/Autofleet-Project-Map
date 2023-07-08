@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-// import { MapContainer, TileLayer, Marker, Popup, FeatureGroup} from "react-leaflet";
 import { MapContainer, FeatureGroup} from "react-leaflet";
 import "./App.css";
 import { EditControl } from "react-leaflet-draw";
 import MarkerSign from './ui-components/MarkerSign/MarkerSign.js';
 import TileLayerMap from './ui-components/TileLayerMap/TileLayerMap.js';
 import PopupList from "./ui-components/PopupList/PopupList";
+
 function App() {
   const [Vehicles, setVehicle] = useState([]);
   const [vehicleInArea, setVehicleInside] = useState([]);
@@ -85,7 +85,6 @@ function App() {
 
   useEffect(() => {
     const convertCord = () => {
-      // Perform actions that depend on the data variable
       if (deletedPolygons !== null) {
         convertCoordinates(deletedPolygons);
         handleDeletion();
