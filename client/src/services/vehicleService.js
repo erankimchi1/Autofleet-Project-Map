@@ -1,11 +1,11 @@
 const vehicleService = {
     fetchVehicles: async () => {
-        return await fetch("http://localhost:8000/vehicles").then(
+        return await fetch("https://autofleet-project-map-erankimchi1.onrender.com/vehicles").then(
             (response) => response.json()
         );
     },
     areaVerification: async(polygonCoordinates, flagReloaded) => {
-        return await fetch('http://localhost:8000/vehicles/insideArea', {
+        return await fetch('https://autofleet-project-map-erankimchi1.onrender.com/vehicles/insideArea', {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
